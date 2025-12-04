@@ -20,20 +20,20 @@ def extract_text(file_path, file_type):
     if "pdf" in ext:
         try:
             # 1) Try normal PDF text extraction
-            reader = PdfReader(file_path)
-            full_text = ""
+            # reader = PdfReader(file_path)
+            # full_text = ""
 
-            for page in reader.pages:
-                text = page.extract_text()
-                if text:
-                    full_text += text + "\n"
+            # for page in reader.pages:
+            #     text = page.extract_text()
+            #     if text:
+            #         full_text += text + "\n"
 
-            if full_text.strip():       # If text was found
-                print("✔ Extracted text using PDFReader")
-                return full_text
+            # if full_text.strip():       # If text was found
+            #     print("✔ Extracted text using PDFReader")
+            #     return full_text
 
-            # 2) Fallback to OCR (image PDFs)
-            print("❌ PDFReader failed → Using OCR fallback")
+            # # 2) Fallback to OCR (image PDFs)
+            # print("❌ PDFReader failed → Using OCR fallback")
             images = convert_from_path(file_path)
 
             ocr_text = ""
