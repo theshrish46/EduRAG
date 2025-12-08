@@ -1,0 +1,15 @@
+{
+    "name": null,
+    "input_variables": [
+        "syllabus_text"
+    ],
+    "optional_variables": [],
+    "output_parser": null,
+    "partial_variables": {},
+    "metadata": null,
+    "tags": null,
+    "template": "\n\n        \"system\",\n        \"You are an assistant that extracts structured syllabus information from raw syllabus text.\"\n    ),\n    (\n        \"user\",\nExtract the following information from the syllabus text provided. \nReturn output strictly as JSON.\n\nFields required:\n\n1. subject_name: Name of the course.\n2. course_code: Code of the course.\n3. modules: A list of all modules. Each module should include:\n    - module_number: e.g., Module-1\n    - module_name: Title of the module\n    - syllabus_content: Full text description of the module (all topics, examples, pedagogy)\n4. course_outcomes: A list of outcomes. Each should include:\n    - description: Text of the outcome\n    - blooms_level: Level in Bloom's taxonomy (L1-L6)\n5. program_outcomes: A dictionary mapping PO codes to their mapping with COs\n\nHere is the syllabus text:\n\n{syllabus_text}\n\nImportant instructions:\n- Return a valid JSON only.\n- Do not include any extra explanations or text outside JSON.\n- Make sure multi-line contents like syllabus_content are preserved properly.\n- Use arrays/lists for multiple modules and outcomes.\n",
+    "template_format": "f-string",
+    "validate_template": true,
+    "_type": "prompt"
+}
