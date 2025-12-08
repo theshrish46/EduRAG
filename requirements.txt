@@ -1,0 +1,35 @@
+# Streamlit frontend
+streamlit
+
+# LangChain
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+python-dotenv
+
+# HuggingFace LLM + embeddings
+transformers
+accelerate
+huggingface-hub
+sentence-transformers
+torch
+numpy
+scikit-learn
+
+# Retrieval
+faiss-cpu
+chromadb
+
+# PDF + DOCX Handling
+pypdf
+pdfplumber
+python-docx
+docx2txt
+
+# PDF generation
+fpdf2
+
+# OCR
+pytesseract
+Pillow
