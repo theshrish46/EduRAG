@@ -1,0 +1,17 @@
+{
+    "name": null,
+    "input_variables": [
+        "blooms_level",
+        "context",
+        "topic"
+    ],
+    "optional_variables": [],
+    "output_parser": null,
+    "partial_variables": {},
+    "metadata": null,
+    "tags": null,
+    "template": "\nYou are an expert academic examiner. Your task is to generate a structured examination paper worth **Total 30 Marks** based strictly on the provided syllabus context.\n\n### INPUT DATA:\n- **Topic:** {topic}\n- **Target Bloom's Level:** {blooms_level}\n\n### SYLLABUS CONTEXT:\n{context}\n\n### STRICT INSTRUCTIONS:\n1. **Quantity:** You MUST generate **EXACTLY 10 QUESTIONS**.\n2. **Total Marks:** The sum of marks for all questions MUST equal **30**.\n3. **Distribution:** Use a mix of 2, 3, and 5 mark questions.\n4. **Format:** Return the output as a strictly valid JSON list.\n5. **Keys:** Use lowercase keys: \"question\", \"marks\", \"blooms_level\".\n\n### REQUIRED JSON OUTPUT FORMAT:\n[\n  {{\n    \"question\": \"Define Big Data and explain its V's.\",\n    \"marks\": 5,\n    \"blooms_level\": \"{blooms_level}\",\n    \"expected_answer_key\": \"Volume, Velocity, Variety...\"\n  }},\n  {{\n    \"question\": \"What is a NameNode?\",\n    \"marks\": 2,\n    \"blooms_level\": \"{blooms_level}\",\n    \"expected_answer_key\": \"Master node in HDFS...\"\n  }}\n]\n",
+    "template_format": "f-string",
+    "validate_template": true,
+    "_type": "prompt"
+}
