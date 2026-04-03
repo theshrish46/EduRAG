@@ -3,6 +3,9 @@
     "input_variables": [
         "blooms_level",
         "context",
+        "format_type",
+        "subject",
+        "temperature",
         "topic"
     ],
     "optional_variables": [],
@@ -10,8 +13,8 @@
     "partial_variables": {},
     "metadata": null,
     "tags": null,
-    "template": "\nYou are an expert academic examiner. Your task is to generate a structured examination paper worth **Total 30 Marks** based strictly on the provided syllabus context.\n\n### INPUT DATA:\n- **Topic:** {topic}\n- **Target Bloom's Level:** {blooms_level}\n\n### SYLLABUS CONTEXT:\n{context}\n\n### STRICT INSTRUCTIONS:\n1. **Quantity:** You MUST generate **EXACTLY 10 QUESTIONS**.\n2. **Total Marks:** The sum of marks for all questions MUST equal **30**.\n3. **Distribution:** Use a mix of 2, 3, and 5 mark questions.\n4. **Format:** Return the output as a strictly valid JSON list.\n5. **Keys:** Use lowercase keys: \"question\", \"marks\", \"blooms_level\".\n\n### REQUIRED JSON OUTPUT FORMAT:\n[\n  {{\n    \"question\": \"Define Big Data and explain its V's.\",\n    \"marks\": 5,\n    \"blooms_level\": \"{blooms_level}\",\n    \"expected_answer_key\": \"Volume, Velocity, Variety...\"\n  }},\n  {{\n    \"question\": \"What is a NameNode?\",\n    \"marks\": 2,\n    \"blooms_level\": \"{blooms_level}\",\n    \"expected_answer_key\": \"Master node in HDFS...\"\n  }}\n]\n",
+    "template": "\nYou are an expert question paper generator.\n\nYour task is to generate a question paper based on the following context:\nCONTEXT: {context}\n\n----------------------------------------\nTASK:\nGenerate questions for the Subject: {subject} on the Topic: {topic}.\nDifficulty Level: {temperature} \nCognitive Level (Bloom's Taxonomy): {blooms_level}\n\nYou must strictly follow the format based on the \"format_type\" provided.\n\n----------------------------------------\nFORMAT RULES:\n\nIf {format_type} == \"FA Internals (Max Marks 30)\":\n- You must generate EXACTLY 6 questions.\n- Each question carries 10 marks.\n- The structure represents 3 choices (Q1 OR Q2, Q3 OR Q4, Q5 OR Q6).\n- Since only one from each pair is answered, the total marks for the student will be 30.\n\nIf {format_type} == \"SA Externals (Max Marks 100)\":\n- You must generate EXACTLY 10 questions.\n- Each question carries 20 marks.\n- The structure represents 5 choices (Q1 OR Q2, Q3 OR Q4, Q5 OR Q6, Q7 OR Q8, Q9 OR Q10).\n- Since only one from each pair is answered, the total marks for the student will be 100.\n\n----------------------------------------\n\nGENERAL INSTRUCTIONS:\n- Clearly mention marks for each question and sub-question.\n- Questions should be appropriate to the given Blooms level: {blooms_level}.\n- Use the provided context to source information: {context}.\n- Avoid repetition and ensure logical progression.\n\n----------------------------------------\nINPUTS:\nSubject: {subject}\nContext: {context}\nTopic: {topic}\nBlooms Level: {blooms_level}\nFormat Type: {format_type}\nTemperature Setting: {temperature}\n\n----------------------------------------\nOUTPUT FORMAT INSTRUCTIONS:\nReturn a JSON array of objects.\n\nExample for Internals:\n[\n  {{\n    \"question\": \"Explain Linear Regression.\",\n    \"marks\": 10\n  }},\n  {{\n    \"question\": \"Explain Logistic Regression.\",\n    \"marks\": 10\n  }}\n]\n----------------------------------------\n\nNotes:\n- Each object must only contain \"question\" and \"marks\".\n- Do NOT include \"qno\", \"subquestions\", or \"qsubno\".\n- Ensure the total marks sum up exactly to the requirement of the {format_type}.\n- Return **valid JSON only**, so it can be directly loaded into Python with `json.loads()`.\n----------------------------------------\n",
     "template_format": "f-string",
-    "validate_template": true,
+    "validate_template": false,
     "_type": "prompt"
 }

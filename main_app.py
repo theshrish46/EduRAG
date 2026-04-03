@@ -1,6 +1,7 @@
 import streamlit as st
 from pathlib import Path
 import os
+import json
 
 # --- Custom Imports ---
 from text_handler.ocr_text import extract_text_from_pdf
@@ -38,6 +39,16 @@ st.sidebar.header("Upload PDFs")
 uploaded_files = st.sidebar.file_uploader(
     "Upload syllabus PDFs", accept_multiple_files=True, type=["pdf"]
 )
+
+st.sidebar.header("Select Format")
+
+format_type = st.sidebar.radio(
+    "Choose Assessment Type",
+    ("FA Internals (Max Marks 30)", "SA Externals (Max Marks 100)"),
+)
+
+st.sidebar.header("Adjust Temperature")
+temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.1)
 
 DATA_DIR = Path("data/raw")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -97,10 +108,11 @@ st.subheader("📝 Question Paper Generator (PDF)")
 col1, col2 = st.columns(2)
 
 with col1:
+    subject = st.text_input("Enter Subject Name")
     topic_input = st.text_input("Enter Topic (e.g., 'Module 5')")
 
 with col2:
-    blooms_level = st.selectbox(
+    blooms_level = st.multiselect(
         "Select Bloom's Taxonomy Level",
         [
             "L1 - Remember",
@@ -112,37 +124,40 @@ with col2:
         ],
     )
 
+
 # Button to Trigger Generation
 if st.button("Generate Question Paper"):
-    if not topic_input:
-        st.warning("Please enter a topic first.")
+    if not subject or not topic_input:
+        st.warning("Please fill in both Subject and Topic.")
     else:
-        # Reset previous PDF
-        st.session_state.generated_pdf = None
+        st.session_state.generated_pdf = None  # Reset previous state
 
-        with st.spinner(f"Generating 10 Questions for {topic_input}..."):
-            # 1. Get Questions from LLM
-            generated_data = generate_questions_chain(topic_input, blooms_level)
+        with st.spinner(f"Creating Questions for {topic_input}..."):
+            # 1. Get output from the LangChain chain
+            generated_data = generate_questions_chain(
+                subject, topic_input, blooms_level, format_type, temperature
+            )
 
-            # 2. Check for success
             if isinstance(generated_data, list):
-                # 3. Create PDF
                 pdf_bytes = generate_pdf_from_questions(
-                    generated_data, topic_input, blooms_level
+                    questions_json=generated_data,
+                    subject=subject if subject else topic_input,
+                    blooms_level=[b.split("-")[0].strip() for b in blooms_level],
+                    max_marks=(
+                        30 if format_type == "FA Internals (Max Marks 30)" else 100
+                    ),
                 )
 
-                # 4. Save to session state
                 st.session_state.generated_pdf = pdf_bytes
-                st.success("Questions generated successfully! Download below.")
-            elif isinstance(generated_data, dict) and "error" in generated_data:
-                st.error(generated_data["error"])
+                st.success("Question generated successfully!")
             else:
-                st.error("Unexpected response format.")
+                st.error(
+                    "The generator returned no data. Check your API connection or Context."
+                )
 
-# --- Download Button (Appears only after generation) ---
 if st.session_state.generated_pdf:
     st.download_button(
-        label="📄 Download Question Paper (PDF)",
+        label="Download PDF",
         data=st.session_state.generated_pdf,
         file_name=f"Questions_{topic_input.replace(' ', '_')}_{blooms_level[:2]}.pdf",
         mime="application/pdf",
@@ -150,15 +165,19 @@ if st.session_state.generated_pdf:
 
 st.divider()
 st.subheader("👨‍🏫 AI Examiner (Grading)")
-st.info("Upload a photo of your handwritten answer, and Gemini will grade it!")
+st.info("Upload a photo of your handwritten answer, and EduRAG will grade it!")
 
 # Input Form
 with st.form("grading_form"):
-    q_text = st.text_input("1. Copy the Question here:", placeholder="e.g. Explain HDFS Architecture")
+    q_text = st.text_input(
+        "1. Copy the Question here:", placeholder="e.g. Explain HDFS Architecture"
+    )
     q_marks = st.number_input("2. Max Marks:", min_value=1, max_value=20, value=5)
-    
-    uploaded_answer = st.file_uploader("3. Upload Handwritten Answer (Image)", type=["jpg", "jpeg", "png"])
-    
+
+    uploaded_answer = st.file_uploader(
+        "3. Upload Handwritten Answer (Image)", type=["jpg", "jpeg", "png"]
+    )
+
     submitted = st.form_submit_button("Grade My Answer")
 
 if submitted:
@@ -169,7 +188,7 @@ if submitted:
             # 1. Retrieve Context for this specific question
             # (We need to know what the syllabus says about this topic!)
             results, _ = similarity_search_from_db(q_text)
-            
+
             if not results:
                 context_text = "No specific context found. Grade based on general academic knowledge."
             else:
@@ -177,24 +196,26 @@ if submitted:
 
             # 2. Call the Grader
             result = grade_answer_image(q_text, context_text, uploaded_answer, q_marks)
-            
+
             # 3. Display Results
             if "error" in result:
                 st.error(f"Error: {result['error']}")
             else:
                 st.balloons()
-                
+
                 # Layout for results
                 col_grade, col_details = st.columns([1, 2])
-                
+
                 with col_grade:
-                    st.metric(label="Marks Awarded", value=result.get("marks_awarded", "N/A"))
-                    st.image(uploaded_answer, caption="Your Answer", width=True)
-                
+                    st.metric(
+                        label="Marks Awarded", value=result.get("marks_awarded", "N/A")
+                    )
+                    st.image(uploaded_answer, caption="Your Answer", width="content")
+
                 with col_details:
                     st.subheader("📝 Feedback")
                     st.write(f"**Reasoning:** {result.get('reasoning')}")
                     st.info(f"**Improvement Tips:** {result.get('improvement_tips')}")
-                    
+
                     with st.expander("What the AI read (Transcription)"):
                         st.text(result.get("handwriting_transcription"))

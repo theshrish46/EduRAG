@@ -18,4 +18,4 @@ def get_llm_model():
 
 
 def get_genai_model():
-    return ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
+    return ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite", temperature=0.1)

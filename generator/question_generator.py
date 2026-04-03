@@ -16,25 +16,24 @@ parser = JsonOutputParser()
 
 
 def get_chain():
-    """
-    Loads the prompt template from the JSON file and creates the chain.
-    """
     try:
-        # Construct path to src/prompts/QUESTION_GEN_PROMPT.json
-
         prompt_template = load_prompt("QUESTION_PROMPT.json")
+        # --- FIX 1: Add the parser to the chain pipe ---
         return prompt_template | model | parser
     except Exception as e:
         print(f"Error loading prompt template: {e}")
         raise e
 
 
-def generate_questions_chain(topic: str, blooms_level: str):
-    """
-    Generates 10 questions using the loaded JSON template.
-    """
+def generate_questions_chain(
+    subject: str,
+    topic: str,
+    blooms_level: list[str],
+    format_type: str,
+    temperature: float,
+):
     max_retries = 3
-    retry_delay = 5
+    retry_delay = 2
 
     try:
         # 1. Retrieval
@@ -45,39 +44,48 @@ def generate_questions_chain(topic: str, blooms_level: str):
             return {"error": "No relevant syllabus content found."}
 
         context_text = "\n\n".join([doc.page_content for doc in results])
-
-        # Load the chain
         chain = get_chain()
 
-        # 2. Generation Loop (Retry Logic)
+        # 2. Generation Loop
         for attempt in range(max_retries):
             try:
                 print(f"Generating questions (Attempt {attempt+1})...")
 
-                response = chain.invoke(
+                # --- FIX 2: The chain now returns a Python LIST directly ---
+                # No more text.split("\n") or .content calls needed!
+                questions = chain.invoke(
                     {
+                        "subject": subject,
                         "context": context_text,
                         "topic": topic,
                         "blooms_level": blooms_level,
+                        "format_type": format_type,
+                        "temperature": temperature,
                     }
                 )
+                if not questions:
+                    print("No questions found")
+                print("========INNERSTART============")
+                print(questions)
+                print(type(questions))
+                print("========INNEREND============")
 
-                if isinstance(response, list):
-                    return response
+                # Validate that we got a list back
+                if isinstance(questions, list) and len(questions) > 0:
+                    return questions
                 else:
-                    print("⚠️ LLM response was not a list. Retrying...")
+                    print("⚠️ Response was not a valid list. Retrying...")
 
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    print(f"⚠️ Quota hit. Waiting {retry_delay}s...")
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    print(f"Error: {e}")
-                    pass
+                    # If JSON parsing fails (parser error), it will catch here
+                    print(f"Parsing/Generation Error: {e}")
 
-        return {"error": "Failed to generate valid questions."}
+        return {"error": "Failed to generate valid JSON questions after retries."}
 
     except Exception as e:
         return {"error": str(e)}
